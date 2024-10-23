@@ -11,5 +11,5 @@ export class OrderPaginationDto extends PaginationDto {
     @IsEnum(OrderStatusList,{
         message: `Valid status are ${OrderStatusList}`
     })
-    status: OrderStatus
+    status?: OrderStatus
 }

@@ -9,8 +9,8 @@ interface EnvVars {
     PRODUCT_MICROSERVICE_PORT : number;
     ORDERS_MICROSERVICE_HOST : string;
     ORDERS_MICROSERVICE_PORT : number;
+    NATS_SERVERS: string[];
 
-  //  DATABASE_URL: string;
 }
 
 const envsSchema = joi.object({
@@ -18,12 +18,15 @@ const envsSchema = joi.object({
     PRODUCT_MICROSERVICE_HOST:joi.string().required(),
     PRODUCT_MICROSERVICE_PORT:joi.number().required(),
     ORDERS_MICROSERVICE_HOST : joi.string().required(),
-    ORDERS_MICROSERVICE_PORT : joi.number().required()
-   // DATABASE_URL: joi.string().required()
+    ORDERS_MICROSERVICE_PORT : joi.number().required(),
+    NATS_SERVERS: joi.array().items(joi.string()).required()
 })
 .unknown(true);
 
-const {error,value} = envsSchema.validate(process.env);
+const {error,value} = envsSchema.validate({
+    ...process.env,
+    NATS_SERVERS: process.env.NATS_SERVERS?.split(',')
+});
 
 if(error){
     throw new Error(`Configuración de validación error: ${error.message}`);
@@ -36,6 +39,6 @@ export const envs = {
     productsMicroserviceHost : envVars.PRODUCT_MICROSERVICE_HOST,
     productsMicroservicePort : envVars.PRODUCT_MICROSERVICE_PORT,
     ordersMicroserviceHost : envVars.ORDERS_MICROSERVICE_HOST,
-    ordersMicroservicePort : envVars.ORDERS_MICROSERVICE_PORT
-  //  databaseurl : envVars.DATABASE_URL
+    ordersMicroservicePort : envVars.ORDERS_MICROSERVICE_PORT,
+    natsServers : envVars.NATS_SERVERS
 }

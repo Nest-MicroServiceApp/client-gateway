@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, ParseIntPipe, Query } from '@nestjs/common';
 import { UpdateOrderDto,CreateOrderDto } from './dto';
-import { ORDER_SERVICE } from 'src/config';
+ import { ORDER_SERVICE } from 'src/config';
+import { NATS_SERVICE } from 'src/config';
+
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { catchError } from 'rxjs';
 import { PaginationDto } from '../common';
@@ -13,13 +15,15 @@ export class OrdersController {
   //*Permite crear una clase personalizada para comunicarse con un servicio 
   //*externo/emitir y publicar mensajes (o eventos)
   constructor(
-    @Inject(ORDER_SERVICE) private readonly odersClient: ClientProxy
+     @Inject(ORDER_SERVICE) private readonly client: ClientProxy
+    //d@Inject(NATS_SERVICE) private readonly client: ClientProxy //*Usando NATS
+ 
 
   ) {}
 
   @Post()
   create(@Body() createOrderDto: CreateOrderDto) {
-    return this.odersClient.send('createOrder',createOrderDto)
+    return this.client.send('createOrder',createOrderDto)
     .pipe(
       catchError(err => { throw new RpcException(err)})
     )
@@ -27,15 +31,31 @@ export class OrdersController {
 
   @Get()
   findAllOrders(@Query() oderPaginationDto:OrderPaginationDto) {
-    return this.odersClient.send('findAllOrders',oderPaginationDto)
+    return this.client.send('findAllOrders',oderPaginationDto)
     .pipe(
       catchError(err => { throw new RpcException(err)})
     )
   }
 
-  @Get(':id')
+  @Get('id/:id')
   findOneOrder(@Param('id', ParseIntPipe) id: number) {
-    return this.odersClient.send('findOneOrder',{id})
+    return this.client.send('findOneOrder',{id})
+    .pipe(
+      catchError(err => { throw new RpcException(err)})
+    )
+  }
+
+  @Get(':status')
+  findAllByStatus(
+    @Param() statusDto: StatusDto,
+    @Query() paginationDto : PaginationDto
+  
+  ) {
+
+    return this.client.send('findAllOrders', {
+      ...paginationDto,
+      status : statusDto
+    })
     .pipe(
       catchError(err => { throw new RpcException(err)})
     )
@@ -51,7 +71,7 @@ export class OrdersController {
 
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.odersClient.send('removeOrder',{id})
+    return this.client.send('removeOrder',{id})
     .pipe(
       catchError(err => { throw new RpcException(err)})
     )
@@ -64,7 +84,7 @@ export class OrdersController {
   ) {
 
     
-      return this.odersClient.send('changeOrderStatus',{id, status:statusDto.status})
+      return this.client.send('changeOrderStatus',{id, status:statusDto.status})
       .pipe(
         catchError(err => { throw new RpcException(err)})
       )

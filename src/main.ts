@@ -7,8 +7,9 @@ import { RpcCustomExceptionFilter } from './common';
 async function bootstrap() {
 
   const logger = new Logger('Main ApiGateway')
+  
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api')
+  app.setGlobalPrefix('api') //Esto es para que todos los endpoint empicen con la palabra "api"
   app.useGlobalPipes(
     new ValidationPipe({
     whitelist: true,

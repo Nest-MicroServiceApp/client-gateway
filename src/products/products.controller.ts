@@ -1,9 +1,11 @@
-import { BadRequestException, Body, Controller, Delete, Get, Inject, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { PRODUCT_SERVICE } from './../config/serivces';
+import { BadRequestException, Body, Controller, Delete, Get, Inject, Logger, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { catchError, firstValueFrom } from 'rxjs';
 import { PaginationDto } from 'src/common';
-import { PRODUCT_SERVICE } from 'src/config';
+import { NATS_SERVICE } from 'src/config';
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -12,26 +14,38 @@ export class ProductsController {
   //*Permite crear una clase personalizada para comunicarse con un servicio 
   //*externo/emitir y publicar mensajes (o eventos)
   constructor(
-    @Inject(PRODUCT_SERVICE) private readonly productsClient: ClientProxy
-  ) {} 
+     @Inject(PRODUCT_SERVICE) private readonly client: ClientProxy //Este es nuestro Proxy que permite conectar con nuestro MS Products
+    //@Inject(NATS_SERVICE) private readonly client: ClientProxy //*Remplazamos ahora por nuestro servidor NATS
 
+  ) {
+  
+  } 
+
+  // @Get('/')
+  // messagePrueba(){
+  //   return 'Hola mundo';
+  // }
+
+   //*Como cualquier servicio rest, podemos hacer uso de nuestros Dto's para validar nuestro request
+  //*Estos Dto's pueden ser los mismos que tendremos del lado de nuestro microservicio
+
+   //*send : es un metodo que permite enviar una petición y recibir una respuesta, este recibo 2 parametros
+      //*patron de mensaje : que sería el nombre tal cual se llamo del lado del microservcio con @MessagePattern
+      //*Payload : que sería lo que queremos enviar como request, sea un @Query, @Param o @Body
   @Post()
   createProduct(@Body() createProductDto: CreateProductDto){
-    return this.productsClient.send({cmd:'create_product'},createProductDto)
+    return this.client.send({cmd:'create_product'},createProductDto)
     .pipe(
       catchError(err => {throw new RpcException(err)})
     )
   }
 
   @Get()
-  //*Como cualquier servicio rest, podemos hacer uso de nuestros Dto's para validar nuestro request
-  //*Estos Dto's pueden ser los mismos que tendremos del lado de nuestro microservicio
   findAllProduct(@Query() paginationDto:PaginationDto){
-
-    //*send : es un metodo que permite enviar una petición y recibir una respuesta, este recibo 2 parametros
-    //*patron de mensaje : que sería el nombre tal cual se llamo del lado del microservcio con @MessagePattern
-    //*Payload : que sería lo que queremos enviar como request, sea un @Query, @Param o @Body
-    return this.productsClient.send({cmd:'find_all_products'},paginationDto)
+    return this.client.send({cmd:'find_all_products'},paginationDto)
+    .pipe(
+      catchError(err => {throw new RpcException(err)})
+    )
   }
 
   @Get(':id')
@@ -55,7 +69,7 @@ export class ProductsController {
     // }
     
     //!2da forma 
-    return this.productsClient.send({cmd:'find_one_product'}, {id})
+    return this.client.send({cmd:'find_one_product'}, {id})
       .pipe(
         catchError(err => {throw new RpcException(err)})
       )
@@ -63,13 +77,26 @@ export class ProductsController {
 
 
   @Delete(':id')
-  deleteProduct(@Param('id') id:string){
-    return `Esta funcion elimina el producto con el id ${id}`
+   deleteProduct(  @Param('id') id:string){
+
+    return this.client.send({cmd: 'delet_product'},{id})
+    .pipe(
+      catchError(err => {throw new RpcException(err)})
+    )
   }
 
   @Patch(':id')
-  updatPorudcto(@Body() body:any){
-    return `Esta funcion actualiza el producto`
+  updatPorudcto(
+    @Param('id', ParseIntPipe) id:string, 
+    @Body() updatPorudcto: UpdateProductDto
+  ){
+    return this.client.send({cmd: 'update_product'},{
+      id,
+      ...updatPorudcto
+    })
+    .pipe(
+      catchError(err => {throw new RpcException(err)})
+    )
   }
 
 }

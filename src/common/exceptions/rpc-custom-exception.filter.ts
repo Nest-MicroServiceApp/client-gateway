@@ -4,20 +4,24 @@ import {
   ArgumentsHost,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Observable, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { RpcException } from '@nestjs/microservices';
+import { Request, Response } from 'express';
 
 //! Leer Contexto de ejecución
 // https://docs.nestjs.com/fundamentals/execution-context#host-handler-arguments
 
+//! Exception Filter 
+//https://docs.nestjs.com/microservices/exception-filters
 @Catch(RpcException)
 export class RpcCustomExceptionFilter
   implements RpcExceptionFilter<RpcException>
 {
-  catch(exception: RpcException, host: ArgumentsHost): Observable<any> {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse();
-
+  catch(exception: RpcException, host: ArgumentsHost): Observable<Response> {
+    const ctx = host.switchToHttp(); //switchToHttp devuelve un objeto HttpArgumentsHost que es apropiado para aplicaciones HTTP
+    const request = ctx.getRequest<Request>(); //aqui podemos obtener el request para hacer un log de errores
+    //console.log(request)
+    const res = ctx.getResponse<Response>();
     const rpcError = exception.getError();
 
     if (
@@ -27,13 +31,13 @@ export class RpcCustomExceptionFilter
     ) {
 
       const status = isNaN(+rpcError.status)  ? 400 : +rpcError.status;
-      return response.status(status).json(rpcError);
+      return of(res.status(status).json(rpcError));
     }
 
 
-    return response.status(401).json({
+    return of( res.status(401).json({
       status: 401,
       message: rpcError,
-    });
+    }));
   }
 }
