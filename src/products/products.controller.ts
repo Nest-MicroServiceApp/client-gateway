@@ -14,8 +14,8 @@ export class ProductsController {
   //*Permite crear una clase personalizada para comunicarse con un servicio 
   //*externo/emitir y publicar mensajes (o eventos)
   constructor(
-     @Inject(PRODUCT_SERVICE) private readonly client: ClientProxy //Este es nuestro Proxy que permite conectar con nuestro MS Products
-    //@Inject(NATS_SERVICE) private readonly client: ClientProxy //*Remplazamos ahora por nuestro servidor NATS
+  //@Inject(PRODUCT_SERVICE) private readonly client: ClientProxy //Este es nuestro Proxy que permite conectar con nuestro MS Products
+    @Inject(NATS_SERVICE) private readonly client: ClientProxy //*Remplazamos ahora por nuestro servidor NATS
 
   ) {
   

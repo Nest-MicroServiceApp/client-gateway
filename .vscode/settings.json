@@ -18,5 +18,15 @@
         "titleBar.inactiveBackground": "#21573299",
         "titleBar.inactiveForeground": "#e7e7e799"
     },
-    "peacock.color": "#215732"
+    "peacock.color": "#215732",
+    "material-icon-theme.projects.associations": {
+        "nestjs": "nestjs"
+    },
+    "material-icon-theme.files.associations": {
+        "*.module.ts": "nest",
+        "*.controller.ts": "nest",
+        "*.service.ts": "nest"
+    }
+
+
 }

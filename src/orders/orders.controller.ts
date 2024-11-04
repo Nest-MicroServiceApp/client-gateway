@@ -15,8 +15,8 @@ export class OrdersController {
   //*Permite crear una clase personalizada para comunicarse con un servicio 
   //*externo/emitir y publicar mensajes (o eventos)
   constructor(
-     @Inject(ORDER_SERVICE) private readonly client: ClientProxy
-    //d@Inject(NATS_SERVICE) private readonly client: ClientProxy //*Usando NATS
+    // @Inject(ORDER_SERVICE) private readonly client: ClientProxy
+    @Inject(NATS_SERVICE) private readonly client: ClientProxy //*Usando NATS
  
 
   ) {}
